@@ -9,6 +9,7 @@
 		<groupId>eu.stratosphere</groupId>
 		<artifactId>hll</artifactId>
 		<version>0.4-SNAPSHOT</version>
+		<relativePath>..</relativePath>
 	</parent>
 
 	<artifactId>stratosphere-dist</artifactId>

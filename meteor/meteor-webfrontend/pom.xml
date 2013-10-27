@@ -13,7 +13,6 @@
 	<name>meteor-webfrontend</name>
 	<artifactId>meteor-webfrontend</artifactId>
 	<packaging>jar</packaging>
-
 	<dependencies>
 		<dependency>
 			<groupId>eu.stratosphere</groupId>
