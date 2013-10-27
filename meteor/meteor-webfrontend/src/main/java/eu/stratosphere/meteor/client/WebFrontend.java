@@ -4,10 +4,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jetty.server.Server;
 
+import eu.stratosphere.meteor.MeteorConfigConstants;
 import eu.stratosphere.meteor.client.common.MeteorContextHandler;
 import eu.stratosphere.nephele.configuration.Configuration;
 import eu.stratosphere.nephele.configuration.GlobalConfiguration;
-import eu.stratosphere.pact.common.util.PactConfigConstants;
 
 /**
  * 
@@ -63,14 +63,14 @@ public class WebFrontend {
 		Configuration config = GlobalConfiguration.getConfiguration();
 		
 		// add stratosphere base dir to config
-		config.setString(PactConfigConstants.STRATOSPHERE_BASE_DIR_PATH_KEY, configDir + "/..");
+		config.setString(MeteorConfigConstants.STRATOSPHERE_BASE_DIR_PATH_KEY, configDir + "/..");
 		if (resourceDir != null) {
 			config.setString(RESOURCEDIR, resourceDir);
 		}
 		
 		// get port of configuration
-		int port = config.getInteger(PactConfigConstants.WEB_FRONTEND_PORT_KEY,
-				PactConfigConstants.DEFAULT_WEB_FRONTEND_PORT);
+		int port = config.getInteger(MeteorConfigConstants.WEB_FRONTEND_PORT_KEY,
+				MeteorConfigConstants.DEFAULT_WEB_FRONTEND_PORT);
 		
 		try {
 			// starts a new jetty server

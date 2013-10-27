@@ -9,6 +9,7 @@
 		<groupId>eu.stratosphere</groupId>
 		<artifactId>hll</artifactId>
 		<version>0.4-SNAPSHOT</version>
+		<relativePath>..</relativePath>
 	</parent>
 
 	<artifactId>stratosphere-dist</artifactId>
@@ -125,6 +126,11 @@
 		<dependency>
 			<groupId>eu.stratosphere</groupId>
 			<artifactId>meteor-client</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+			<dependency>
+			<groupId>eu.stratosphere</groupId>
+			<artifactId>meteor-webfrontend</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>

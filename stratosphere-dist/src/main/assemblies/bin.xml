@@ -54,7 +54,15 @@
 				<exclude>*</exclude>
 			</excludes>
 		</fileSet>
-
+		<fileSet>		
+			<!-- copy files for Meteor web frontend -->		
+			<directory>../meteor/meteor-webfrontend/resources</directory>		
+			<outputDirectory>resources</outputDirectory>		
+			<fileMode>0644</fileMode>		
+			<excludes>		
+				<exclude>*etc/users</exclude>		
+			</excludes>		
+		</fileSet>
 		<fileSet>
 			<!-- create an empty dropin-lib directory -->
 			<directory>src/main/stratosphere-bin/docs</directory>
