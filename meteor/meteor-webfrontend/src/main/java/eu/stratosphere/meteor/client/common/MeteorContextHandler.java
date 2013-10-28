@@ -8,6 +8,7 @@ import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
+import eu.stratosphere.meteor.MeteorConfigConstants;
 import eu.stratosphere.meteor.client.ClientFrontend;
 import eu.stratosphere.meteor.client.WebFrontend;
 import eu.stratosphere.meteor.client.web.AnalysisServlet;
@@ -18,7 +19,6 @@ import eu.stratosphere.meteor.client.web.PactVisServlet;
 import eu.stratosphere.meteor.client.web.RuntimeStateServlet;
 import eu.stratosphere.meteor.client.web.VisualizationServlet;
 import eu.stratosphere.nephele.configuration.Configuration;
-import eu.stratosphere.pact.common.util.PactConfigConstants;
 import eu.stratosphere.sopremo.query.QueryParserException;
 
 /**
@@ -69,6 +69,10 @@ public class MeteorContextHandler extends HandlerList {
 		// get resources path
 		String resources = getAbsolutResourcePath( config );
 		
+		// get port of configuration
+		int port = config.getInteger(MeteorConfigConstants.WEB_FRONTEND_PORT_KEY,
+				MeteorConfigConstants.DEFAULT_WEB_FRONTEND_PORT);
+		
 		// dynamic servlets
 		outputServlet = new OutputServlet();
 		visualServlet = new VisualizationServlet();
@@ -116,11 +120,11 @@ public class MeteorContextHandler extends HandlerList {
 		}
 		
 		// get base path of Stratosphere installation
-		String basePath = config.getString(PactConfigConstants.STRATOSPHERE_BASE_DIR_PATH_KEY,"");
+		String basePath = config.getString(MeteorConfigConstants.STRATOSPHERE_BASE_DIR_PATH_KEY,"");
 		
 		// get relative resource path
-		String resources = config.getString(PactConfigConstants.WEB_ROOT_PATH_KEY,
-				PactConfigConstants.DEFAULT_WEB_ROOT_DIR);
+		String resources = config.getString(MeteorConfigConstants.WEB_ROOT_PATH_KEY,
+				MeteorConfigConstants.DEFAULT_WEB_ROOT_DIR);
 		
 		// get resource folder
 		File resourcesFile;
