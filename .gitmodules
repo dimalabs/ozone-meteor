@@ -1,0 +1,3 @@
+[submodule "stratosphere-dist/target/stratosphere-dist-0.4-SNAPSHOT-bin/stratosphere-0.4-SNAPSHOT"]
+	path = stratosphere-dist/target/stratosphere-dist-0.4-SNAPSHOT-bin/stratosphere-0.4-SNAPSHOT
+	url = https://github.com/TU-Berlin/dopa-binaries.git
