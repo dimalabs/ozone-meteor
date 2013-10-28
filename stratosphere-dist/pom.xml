@@ -128,6 +128,11 @@
 			<artifactId>meteor-client</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+			<dependency>
+			<groupId>eu.stratosphere</groupId>
+			<artifactId>meteor-webfrontend</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
