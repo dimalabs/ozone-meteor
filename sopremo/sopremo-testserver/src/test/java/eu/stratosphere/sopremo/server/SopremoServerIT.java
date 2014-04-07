@@ -22,6 +22,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.io.Files;
+
 import eu.stratosphere.sopremo.base.Selection;
 import eu.stratosphere.sopremo.execution.ExecutionRequest;
 import eu.stratosphere.sopremo.execution.ExecutionResponse;
@@ -44,6 +46,7 @@ public class SopremoServerIT {
 	private SopremoTestServer testServer;
 
 	private File inputDir;
+	private File outputDir;
 
 	/**
 	 * Initializes SopremoServerIT.
@@ -54,12 +57,13 @@ public class SopremoServerIT {
 	@Before
 	public void setup() throws Exception {
 		this.testServer = new SopremoTestServer(false);
-		this.inputDir = this.testServer.createDir("input");
+		this.inputDir = this.testServer.createTempDir();
+		this.outputDir = this.testServer.createTempDir();
 
-		this.testServer.createFile("input/input1.json",
+		this.testServer.createFile(this.inputDir.getName()+"/input1.json",
 			JsonUtil.createObjectNode("name", "Jon Doe", "income", 20000, "mgr", false),
 			JsonUtil.createObjectNode("name", "Vince Wayne", "income", 32500, "mgr", false));
-		this.testServer.createFile("input/input2.json",
+		this.testServer.createFile(this.inputDir.getName()+"/input2.json",
 			JsonUtil.createObjectNode("name", "Jane Dean", "income", 72000, "mgr", true),
 			JsonUtil.createObjectNode("name", "Alex Smith", "income", 25000, "mgr", false));
 	}
@@ -99,7 +103,7 @@ public class SopremoServerIT {
 	@Test
 	public void testFailIfSubmissionFails() throws IOException, InterruptedException {
 		// job manager cannot determine input splits
-		this.testServer.delete("input", true);
+		this.testServer.delete(this.inputDir.getName(), true);
 		final SopremoPlan plan = this.createPlan("output.json");
 
 		ExecutionResponse response = this.testServer.execute(new ExecutionRequest(plan));
@@ -125,7 +129,7 @@ public class SopremoServerIT {
 			Assert.assertSame(ExecutionState.FINISHED, responses[index].getState());
 			Assert.assertSame("", responses[index].getDetails());
 
-			this.testServer.checkContentsOf("output" + index + ".json",
+			this.testServer.checkContentsOf(this.outputDir.getName()+"/"+"output" + index + ".json",
 				JsonUtil.createObjectNode("name", "Vince Wayne", "income", 32500, "mgr", false),
 				JsonUtil.createObjectNode("name", "Jane Dean", "income", 72000, "mgr", true));
 		}
@@ -142,7 +146,7 @@ public class SopremoServerIT {
 		Assert.assertSame(ExecutionState.FINISHED, response.getState());
 		Assert.assertSame("", response.getDetails());
 
-		this.testServer.checkContentsOf("output.json",
+		this.testServer.checkContentsOf(this.outputDir.getName()+"/"+"output.json",
 			JsonUtil.createObjectNode("name", "Vince Wayne", "income", 32500, "mgr", false),
 			JsonUtil.createObjectNode("name", "Jane Dean", "income", 72000, "mgr", true));
 	}
@@ -157,7 +161,7 @@ public class SopremoServerIT {
 					new ComparativeExpression(JsonUtil.createPath("0", "income"), BinaryOperator.GREATER,
 						new ConstantExpression(30000)))).
 			withInputs(input);
-		final Sink output = new Sink(this.testServer.createFile(outputName).toURI().toString()).withInputs(selection);
+		final Sink output = new Sink(this.testServer.createFile(this.outputDir.getName()+"/"+outputName).toURI().toString()).withInputs(selection);
 		plan.setSinks(output);
 		return plan;
 	}

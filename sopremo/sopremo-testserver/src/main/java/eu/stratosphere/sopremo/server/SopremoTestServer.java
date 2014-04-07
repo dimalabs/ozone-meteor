@@ -33,6 +33,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.junit.Assert;
 import org.junit.Ignore;
 
+import com.google.common.io.Files;
+
 import eu.stratosphere.client.minicluster.NepheleMiniCluster;
 import eu.stratosphere.nephele.execution.librarycache.LibraryCacheProfileRequest;
 import eu.stratosphere.nephele.execution.librarycache.LibraryCacheProfileResponse;
@@ -176,6 +178,14 @@ public class SopremoTestServer implements Closeable, SopremoExecutionProtocol {
 		file.mkdirs();
 		return file;
 	}
+
+	public File createTempDir() {
+		final File file = Files.createTempDir();
+		this.filesToCleanup.add(file.getName());
+		return file;
+	}
+
+	
 
 	public File createFile(final String fileName, final IJsonNode... nodes) throws IOException {
 		this.filesToCleanup.add(this.getTempName(fileName));
