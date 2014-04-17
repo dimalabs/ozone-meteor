@@ -172,15 +172,15 @@ public class PackageManager implements ParsingScope {
 							break;
 						}
 					if (jarFile != null) {
-						QueryUtil.LOG.debug("adding package " + packagePath);
+						QueryUtil.LOG.debug("adding package from classpath: " + packagePath);
 						packageInfo.importFrom(jarFile, packageName);
 					} else packageInfo.importFromProject(packagePath.get(0));
 				} else {
 					final File jarLocation = this.findPackageInJarPathLocations(packageName);
 					if (jarLocation == null)
 						throw new IllegalArgumentException(String.format("no package %s found", packageName));
-					packageInfo = new PackageInfo(packageName, this.nameChooserProvider);
-					QueryUtil.LOG.debug("adding package " + packagePath);
+					packageInfo = new PackageInfo(packageName, this.classLoader, this.nameChooserProvider);
+					QueryUtil.LOG.debug("adding package from jar path: " + packageName);
 					packageInfo.importFrom(jarLocation, packageName);
 				}
 			} catch (final Exception e) {
@@ -259,7 +259,7 @@ public class PackageManager implements ParsingScope {
 	protected File findPackageInJarPathLocations(final String packageName) {
 		final String sopremoPackage = getJarFileNameForPackageName(packageName);
 		// look in additional directories
-		final Pattern filePattern = Pattern.compile(sopremoPackage + ".*\\.jar");
+		final Pattern filePattern = Pattern.compile(sopremoPackage + "(-[0-9].*)?\\.jar");
 
 		for (final File jarPathLocation : this.jarPathLocations) {
 			final File[] jars = jarPathLocation.listFiles(new FilenameFilter() {
