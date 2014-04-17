@@ -85,27 +85,32 @@ public abstract class Operator<Self extends Operator<Self>> extends Configurable
 		PropertyDescriptor[] properties = this.getBeanInfo().getPropertyDescriptors();
 		for (PropertyDescriptor pd : properties){
 			try {
-				String key = "";
-				Name name = pd.getWriteMethod().getAnnotation(Name.class);
-				if (name.verb().length>0)
-					key = name.verb()[0];
-				else
-					if (name.noun().length>0)
-						key = name.noun()[0];
-					else
-						if (name.adjective().length>0)
-							key = name.adjective()[0];
-						else
-							if (name.preposition().length>0)
-								key = name.preposition()[0];
-							else
-								continue;
-				Object value = pd.getReadMethod().invoke(this);
-				builder.append("; "+key+": "+value);
+				String key = getPropertyKey(pd);
+				if(key != null) {
+					Object value = pd.getReadMethod().invoke(this);
+					builder.append("; "+key+": "+value);
+				}
 			} catch (Exception e) {
 			}
 		}
 		return builder.toString();
+	}
+
+	public String getPropertyKey(PropertyDescriptor pd) {
+		String key = null;
+		Name name = pd.getWriteMethod().getAnnotation(Name.class);
+		if (name.verb().length>0)
+			key = name.verb()[0];
+		else
+			if (name.noun().length>0)
+				key = name.noun()[0];
+			else
+				if (name.adjective().length>0)
+					key = name.adjective()[0];
+				else
+					if (name.preposition().length>0)
+						key = name.preposition()[0];
+		return key;
 	}
 	
 	/**
