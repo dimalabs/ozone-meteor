@@ -17,6 +17,7 @@ package eu.stratosphere.sopremo.expressions;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import eu.stratosphere.sopremo.expressions.tree.ChildIterator;
@@ -57,13 +58,26 @@ public class ArrayCreation extends EvaluationExpression {
 	 * @param elements
 	 *        the expressions that evaluate to the elements in the array
 	 */
-	public ArrayCreation(final List<EvaluationExpression> elements) {
+	public ArrayCreation(final Collection<EvaluationExpression> elements) {
 		this.elements = new ArrayList<EvaluationExpression>(elements);
 	}
 
 	public ArrayCreation add(final EvaluationExpression expression) {
 		this.elements.add(expression);
 		return this;
+	}
+	
+	/**
+	 * Sets the elements to the specified value.
+	 *
+	 * @param elements the elements to set
+	 */
+	public void setElements(List<EvaluationExpression> elements) {
+		if (elements == null)
+			throw new NullPointerException("elements must not be null");
+
+		this.elements.clear();;
+		this.elements.addAll(elements);
 	}
 
 	@Override
@@ -120,5 +134,9 @@ public class ArrayCreation extends EvaluationExpression {
 
 	public int size() {
 		return this.elements.size();
+	}
+
+	public void set(int index, EvaluationExpression evaluationExpression) {
+		this.elements.set(index, evaluationExpression);
 	}
 }

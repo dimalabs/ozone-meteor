@@ -230,7 +230,7 @@ public abstract class AbstractArrayNode<T extends IJsonNode> extends AbstractJso
 			result[i++] = node;
 	}
 
-	public static class ArraySerializer extends ReusingSerializer<ArrayNode<IJsonNode>> {
+	public static class ArraySerializer extends AbstractReusingSerializer<ArrayNode<IJsonNode>> {
 		/*
 		 * (non-Javadoc)
 		 * @see eu.stratosphere.sopremo.type.ReusingSerializer#read(com.esotericsoftware.kryo.Kryo,
@@ -241,7 +241,7 @@ public abstract class AbstractArrayNode<T extends IJsonNode> extends AbstractJso
 			if (oldInstance == null)
 				return this.read(kryo, input, type);
 
-			final int len = input.readInt();
+			final int len = input.readInt(true);
 
 			for (int i = 0; i < len; i++)
 				oldInstance.set(i, SopremoUtil.deserializeInto(kryo, input, oldInstance.get(i)));
@@ -257,7 +257,7 @@ public abstract class AbstractArrayNode<T extends IJsonNode> extends AbstractJso
 		 */
 		@Override
 		public ArrayNode<IJsonNode> read(final Kryo kryo, final Input input, final Class<ArrayNode<IJsonNode>> type) {
-			final int len = input.readInt();
+			final int len = input.readInt(true);
 
 			final ArrayNode<IJsonNode> array = kryo.newInstance(type);
 			for (int i = 0; i < len; i++)
@@ -272,7 +272,7 @@ public abstract class AbstractArrayNode<T extends IJsonNode> extends AbstractJso
 		 */
 		@Override
 		public void write(final Kryo kryo, final Output output, final ArrayNode<IJsonNode> array) {
-			output.writeInt(array.size());
+			output.writeInt(array.size(), true);
 
 			for (final IJsonNode entry : array)
 				kryo.writeClassAndObject(output, entry);

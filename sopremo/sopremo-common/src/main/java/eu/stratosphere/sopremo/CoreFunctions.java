@@ -205,7 +205,7 @@ public class CoreFunctions implements BuiltinProvider {
 			return array;
 		}
 	};
-
+	
 	@Name(noun = "camelCase")
 	public static final SopremoFunction CAMEL_CASE = new SopremoFunction1<TextNode>() {
 		private transient StringBuilder builder = new StringBuilder();
@@ -214,7 +214,7 @@ public class CoreFunctions implements BuiltinProvider {
 
 		@Override
 		protected IJsonNode call(final TextNode input) {
-			builder = new StringBuilder();
+			this.builder.setLength(0);
 			this.builder.append(input);
 
 			boolean capitalize = true;
@@ -431,11 +431,11 @@ public class CoreFunctions implements BuiltinProvider {
 				final IntNode to) {
 			final int length = input.length();
 			final int fromPos = resolveIndex(from.getIntValue(), length);
-			final int toPos = resolveIndex(to.getIntValue(), length);
+			final int toPos = Math.min(resolveIndex(to.getIntValue(), length), length);
 			this.result.setValue(input, fromPos, toPos);
 			return this.result;
 		}
-	}.withDefaultParameters(new IntNode(-1));
+	}.withDefaultParameters(new IntNode(Integer.MAX_VALUE));
 
 	@Name(verb = "trim")
 	public static final SopremoFunction TRIM = new SopremoFunction1<TextNode>() {
@@ -467,6 +467,27 @@ public class CoreFunctions implements BuiltinProvider {
 			return this.union;
 		}
 	};
+	
+	@Name(verb = "arrayMerge")
+	public static final SopremoFunction ARRAY_MERGE = new SopremoVarargFunction1<IStreamNode<?>>() {
+		private final transient IArrayNode<IJsonNode> mergedArray = new ArrayNode<IJsonNode>();
+
+		@Override
+		protected IArrayNode<IJsonNode> call(final IStreamNode<?> array, final IArrayNode<IJsonNode> moreArrays) {
+			mergedArray.clear();
+			for(IJsonNode element: array){
+				if(element instanceof IArrayNode<?>){
+					mergedArray.addAll((IArrayNode<IJsonNode>)element);
+				} else if(element instanceof MissingNode){
+					continue;
+				}
+				else{
+					mergedArray.add(element);
+				}
+			}
+			return mergedArray;
+		}
+	};
 
 	@Name(noun = { "indexOf", "strpos" })
 	public static final SopremoFunction STRPOS = new SopremoFunction2<TextNode, TextNode>() {
@@ -492,5 +513,12 @@ public class CoreFunctions implements BuiltinProvider {
 			path = new File(path).toURI().toString();
 		SopremoEnvironment.getInstance().getEvaluationContext().setWorkingPath(new Path(path));
 		return MissingNode.getInstance();
+	}
+
+	@Name(verb = "hdfs")
+	public static TextNode hdfsPrefix(final TextNode node) {
+		TextNode result = new TextNode("hdfs://");
+		result.append(node);
+		return result;
 	}
 }

@@ -28,6 +28,7 @@ import eu.stratosphere.sopremo.type.IArrayNode;
 import eu.stratosphere.sopremo.type.IJsonNode;
 import eu.stratosphere.sopremo.type.IObjectNode;
 import eu.stratosphere.sopremo.type.MissingNode;
+import eu.stratosphere.sopremo.type.NullNode;
 import eu.stratosphere.sopremo.type.ObjectNode;
 
 /**
@@ -155,6 +156,34 @@ public class ObjectCreation extends EvaluationExpression {
 	}
 
 	/**
+	 * Returns the mapping at the specified index
+	 * 
+	 * @param index
+	 *        the index of the mapping that should be returned
+	 * @return the mapping at the specified index
+	 */
+	public Mapping<?> getMapping(final String fieldName) {
+		for (Mapping<?> mapping : this.mappings)
+			if (mapping.getTarget().equals(fieldName))
+				return mapping;
+		return null;
+	}
+
+	/**
+	 * Returns the mapping at the specified index
+	 * 
+	 * @param index
+	 *        the index of the mapping that should be returned
+	 * @return the mapping at the specified index
+	 */
+	public EvaluationExpression getExpression(final String fieldName) {
+		Mapping<?> mapping = getMapping(fieldName);
+		if (mapping == null)
+			return null;
+		return mapping.getExpression();
+	}
+
+	/**
 	 * Returns the mappings
 	 * 
 	 * @return the mappings
@@ -221,7 +250,7 @@ public class ObjectCreation extends EvaluationExpression {
 		@Override
 		protected void evaluate(final IJsonNode node, final IObjectNode target) {
 			final IJsonNode exprNode = this.getExpression().evaluate(node);
-			if (!(exprNode instanceof MissingNode))
+			if (!(exprNode instanceof MissingNode) && !(exprNode instanceof NullNode))
 				target.putAll((IObjectNode) exprNode);
 		}
 	}
@@ -404,21 +433,21 @@ public class ObjectCreation extends EvaluationExpression {
 		protected abstract void evaluate(IJsonNode node, IObjectNode target);
 	}
 
-	public static class TagMapping extends Mapping<EvaluationExpression> {
+	public static class SymbolicAssignment extends Mapping<EvaluationExpression> {
 		/**
-		 * Initializes TagMapping.
+		 * Initializes SymbolicAssignment.
 		 * 
 		 * @param target
 		 * @param expression
 		 */
-		public TagMapping(final EvaluationExpression target, final EvaluationExpression expression) {
+		public SymbolicAssignment(final EvaluationExpression target, final EvaluationExpression expression) {
 			super(target, expression);
 		}
 
 		/**
-		 * Initializes ObjectCreation.TagMapping.
+		 * Initializes ObjectCreation.SymbolicAssignment.
 		 */
-		TagMapping() {
+		SymbolicAssignment() {
 		}
 
 		/*

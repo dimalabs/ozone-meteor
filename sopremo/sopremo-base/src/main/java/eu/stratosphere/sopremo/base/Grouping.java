@@ -8,11 +8,18 @@ import java.util.List;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
-import com.google.common.collect.Lists;
 
 import eu.stratosphere.sopremo.CoreFunctions;
 import eu.stratosphere.sopremo.aggregation.AssociativeAggregation;
-import eu.stratosphere.sopremo.expressions.*;
+import eu.stratosphere.sopremo.expressions.AggregationExpression;
+import eu.stratosphere.sopremo.expressions.ArrayAccess;
+import eu.stratosphere.sopremo.expressions.ArrayCreation;
+import eu.stratosphere.sopremo.expressions.BatchAggregationExpression;
+import eu.stratosphere.sopremo.expressions.ConstantExpression;
+import eu.stratosphere.sopremo.expressions.EvaluationExpression;
+import eu.stratosphere.sopremo.expressions.ExpressionUtil;
+import eu.stratosphere.sopremo.expressions.InputSelection;
+import eu.stratosphere.sopremo.expressions.OrderingExpression;
 import eu.stratosphere.sopremo.operator.CompositeOperator;
 import eu.stratosphere.sopremo.operator.ElementaryOperator;
 import eu.stratosphere.sopremo.operator.InputCardinality;
@@ -276,6 +283,7 @@ public class Grouping extends CompositeOperator<Grouping> {
 			if (!(aggregationExpression.getAggregation() instanceof AssociativeAggregation))
 				return new GroupProjection().withResultProjection(resultProjection).
 					withKeyExpression(0, this.getGroupingKey(0).clone().remove(new InputSelection(0))).
+					withInnerGroupOrdering(0, this.innerGroupOrders.get(0)).
 					withInputs(module.getInputs());
 
 		// first project all tuples to an array with a slot for each aggregation

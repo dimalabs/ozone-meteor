@@ -15,16 +15,14 @@
 package eu.stratosphere.sopremo.type;
 
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 
 /**
+ * @author arvid
+ *
+ * @param <T>
  */
-public abstract class ReusingSerializer<T> extends Serializer<T> {
-	@Override
-	public T read(final Kryo kryo, final Input input, final Class<T> type) {
-		return this.read(kryo, input, null, type);
-	}
+public interface ReusingSerializer<T> {
 
 	/*
 	 * (non-Javadoc)
@@ -32,4 +30,5 @@ public abstract class ReusingSerializer<T> extends Serializer<T> {
 	 * com.esotericsoftware.kryo.io.Input, java.lang.Class)
 	 */
 	public abstract T read(Kryo kryo, Input input, T oldInstance, Class<T> type);
+
 }

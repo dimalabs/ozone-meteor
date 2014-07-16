@@ -86,6 +86,13 @@ public class SopremoUtil {
 				String.format("Cannot use the given function as it does not accept %d arguments", numberOfArguments));
 	}
 
+	@SuppressWarnings("unchecked")
+	public static <V> V cast(Object object, Class<V> expectedClass, String error) {
+		if (expectedClass.isInstance(object))
+			return (V) object;
+		throw new IllegalArgumentException(error);
+	}
+
 	/**
 	 * Configures an object with the given {@link Configuration} that has been initialized with
 	 * {@link #transferFieldsToConfiguration(Object, Class, Configuration, Class, Class)}.
@@ -181,9 +188,11 @@ public class SopremoUtil {
 	@SuppressWarnings("unchecked")
 	public static <T> T deserializeInto(final Kryo kryo, final Input input, final T oldNode) {
 		final Registration registration = kryo.readClass(input);
+		if(registration == null)
+			return null;
 
 		final Serializer<T> serializer = registration.getSerializer();
-		if (serializer instanceof ReusingSerializer<?> && registration.getType() == oldNode.getClass())
+		if (oldNode != null && serializer instanceof ReusingSerializer<?> && registration.getType() == oldNode.getClass())
 			return ((ReusingSerializer<T>) serializer).read(kryo, input, oldNode, registration.getType());
 		return serializer.read(kryo, input, registration.getType());
 	}

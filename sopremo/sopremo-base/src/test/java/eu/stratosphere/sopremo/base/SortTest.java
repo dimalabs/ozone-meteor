@@ -14,8 +14,10 @@
  **********************************************************************************************************************/
 package eu.stratosphere.sopremo.base;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 import org.junit.Assert;
@@ -67,7 +69,10 @@ public class SortTest extends SopremoOperatorTestBase<Sort> {
 				return o1.get(1).compareTo(o2.get(1));
 			}
 		});
-		final List<IJsonNode> actual = Lists.newArrayList(sopremoPlan.getActualOutput(0).unsortedIterator());
+		final Iterator<IJsonNode> unsortedIterator = sopremoPlan.getActualOutput(0).unsortedIterator();
+		final List<IJsonNode> actual = new ArrayList<IJsonNode>();
+		while(unsortedIterator.hasNext())
+			actual.add(unsortedIterator.next().clone());
 		Assert.assertEquals(expected, actual);
 	}
 

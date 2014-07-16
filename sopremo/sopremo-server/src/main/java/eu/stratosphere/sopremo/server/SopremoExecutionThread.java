@@ -82,7 +82,8 @@ public class SopremoExecutionThread implements Runnable {
 
 		final OptimizedPlan optPlan = compiler.compile(pactPlan);
 		final NepheleJobGraphGenerator gen = new NepheleJobGraphGenerator();
-		return gen.compileJobGraph(optPlan);
+		JobGraph jobGraph = gen.compileJobGraph(optPlan);
+		return jobGraph;
 	}
 
 	private JobExecutionResult executePlan(final SopremoPlan plan, Configuration jobConfig) {

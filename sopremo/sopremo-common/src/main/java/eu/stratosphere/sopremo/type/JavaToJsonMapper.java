@@ -60,11 +60,14 @@ public class JavaToJsonMapper extends AbstractTypeMapper<TypeMapper<?, ?>> {
 		this.addDefaultTypeMapping(Float.class, DoubleNode.class);
 		this.addDefaultTypeMapping(Float.TYPE, DoubleNode.class);
 		this.addDefaultTypeMapping(CharSequence.class, TextNode.class);
+		this.addDefaultTypeMapping(Character.class, TextNode.class);
+		this.addDefaultTypeMapping(Character.TYPE, TextNode.class);
 		this.addDefaultTypeMapping(Boolean.class, BooleanNode.class);
 		this.addDefaultTypeMapping(Boolean.TYPE, BooleanNode.class);
 		this.addDefaultTypeMapping(Enum.class, TextNode.class);
 		this.addDefaultTypeMapping(Map.class, ObjectNode.class);
 		this.addDefaultTypeMapping(Collection.class, CachingArrayNode.class);
+		this.addDefaultTypeMapping(Class.class, TypeNode.class);
 
 		this.addToIntMapper();
 		this.addToDoubleMapper();
@@ -74,6 +77,7 @@ public class JavaToJsonMapper extends AbstractTypeMapper<TypeMapper<?, ?>> {
 		this.addToStringMapper();
 		this.addToBooleanMapper();
 		this.addToObjectMapper();
+		this.addToTypeMapper();
 	}
 
 	/*
@@ -237,6 +241,18 @@ public class JavaToJsonMapper extends AbstractTypeMapper<TypeMapper<?, ?>> {
 				}
 			};
 		this.addMapper(Map.class, ObjectNode.class, toObjectMapper);
+	}
+
+	private void addToTypeMapper() {
+		final TypeMapper<Class<? extends IJsonNode>, TypeNode> toObjectMapper =
+			new TypeMapper<Class<? extends IJsonNode>, TypeNode>(TypeNode.class) {
+				@Override
+				public TypeNode mapTo(final Class<? extends IJsonNode> nodeType, final TypeNode target) {
+					target.setNodeType(nodeType);
+					return target;
+				}
+			};
+		this.addMapper(Class.class, TypeNode.class, toObjectMapper);
 	}
 
 	private void addToStringMapper() {

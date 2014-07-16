@@ -18,12 +18,12 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
-import eu.stratosphere.sopremo.type.ReusingSerializer;
+import eu.stratosphere.sopremo.type.AbstractReusingSerializer;
 
 /**
  */
 @SuppressWarnings("rawtypes")
-public abstract class SingletonSerializer extends ReusingSerializer {
+public abstract class SingletonSerializer extends AbstractReusingSerializer {
 	private final Object singleton;
 
 	/**

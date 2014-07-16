@@ -33,6 +33,7 @@ import eu.stratosphere.core.fs.FileStatus;
 import eu.stratosphere.core.fs.FileSystem;
 import eu.stratosphere.core.fs.Path;
 import eu.stratosphere.runtime.fs.LineReader;
+import eu.stratosphere.sopremo.cache.NodeCache;
 import eu.stratosphere.sopremo.operator.Name;
 import eu.stratosphere.sopremo.operator.Property;
 import eu.stratosphere.sopremo.type.IArrayNode;
@@ -40,6 +41,8 @@ import eu.stratosphere.sopremo.type.IJsonNode;
 import eu.stratosphere.sopremo.type.IObjectNode;
 import eu.stratosphere.sopremo.type.ObjectNode;
 import eu.stratosphere.sopremo.type.TextNode;
+import eu.stratosphere.sopremo.type.TypeCoercer;
+import eu.stratosphere.util.CollectionUtil;
 import eu.stratosphere.util.Equaler;
 
 @Name(noun = { "csv", "tsv" })
@@ -54,9 +57,11 @@ public class CsvFormat extends SopremoFormat {
 
 	private char fieldDelimiter = AUTO;
 
-	private Boolean quotation;
+	private Boolean quotation, header;
 
-	private String[] keyNames = new String[0];
+	private List<String> keyNames = new ArrayList<String>();
+
+	private List<Class<? extends IJsonNode>> types = new ArrayList<Class<? extends IJsonNode>>();
 
 	private int numLineSamples = DEFAULT_NUM_SAMPLES;
 
@@ -97,7 +102,9 @@ public class CsvFormat extends SopremoFormat {
 		return this.fieldDelimiter == other.fieldDelimiter
 			&& this.numLineSamples == other.numLineSamples
 			&& Equaler.SafeEquals.equal(this.quotation, other.quotation)
-			&& Arrays.equals(this.keyNames, other.keyNames);
+			&& Equaler.SafeEquals.equal(this.header, other.header)
+			&& this.keyNames.equals(other.keyNames)
+			&& this.types.equals(other.types);
 	}
 
 	/**
@@ -114,7 +121,7 @@ public class CsvFormat extends SopremoFormat {
 	 * 
 	 * @return the keyNames
 	 */
-	public String[] getKeyNames() {
+	public List<String> getKeyNames() {
 		return this.keyNames;
 	}
 
@@ -141,9 +148,11 @@ public class CsvFormat extends SopremoFormat {
 		final int prime = 31;
 		int result = super.hashCode();
 		result = prime * result + this.fieldDelimiter;
-		result = prime * result + Arrays.hashCode(this.keyNames);
+		result = prime * result + this.keyNames.hashCode();
+		result = prime * result + this.types.hashCode();
 		result = prime * result + this.numLineSamples;
 		result = prime * result + (this.quotation == null ? 0 : this.quotation.hashCode());
+		result = prime * result + (this.header == null ? 0 : this.header.hashCode());
 		return result;
 	}
 
@@ -169,11 +178,84 @@ public class CsvFormat extends SopremoFormat {
 	 */
 	@Property
 	@Name(noun = "columns")
-	public void setKeyNames(final String... keyNames) {
+	public void setKeyNames(final List<String> keyNames) {
 		if (keyNames == null)
 			throw new NullPointerException("keyNames must not be null");
 
-		this.keyNames = keyNames;
+		this.keyNames = new ArrayList<String>(keyNames);
+	}
+
+	/**
+	 * Sets the keyNames to the specified value.
+	 * 
+	 * @param keyNames
+	 *        the keyNames to set
+	 */
+	public void setKeyNames(final String... keyNames) {
+		setKeyNames(Arrays.asList(keyNames));
+	}
+
+	/**
+	 * Sets the types to the specified value.
+	 * 
+	 * @param types
+	 *        the types to set
+	 */
+	@Property
+	@Name(noun = "types")
+	public void setTypes(List<Class<? extends IJsonNode>> types) {
+		if (types == null)
+			throw new NullPointerException("types must not be null");
+
+		this.types = types;
+	}
+
+	/**
+	 * Sets the types to the specified value.
+	 * 
+	 * @param types
+	 *        the types to set
+	 */
+	public CsvFormat withTypes(List<Class<? extends IJsonNode>> types) {
+		setTypes(types);
+		return this;
+	}
+
+	/**
+	 * Sets the types to the specified value.
+	 * 
+	 * @param types
+	 *        the types to set
+	 */
+	@SuppressWarnings("unchecked")
+	public void setTypes(Class<?>... types) {
+		List<Class<? extends IJsonNode>> typeList = new ArrayList<Class<? extends IJsonNode>>();
+		for (Class<?> type : types) {
+			if (!IJsonNode.class.isAssignableFrom(type))
+				throw new IllegalArgumentException();
+			typeList.add((Class<? extends IJsonNode>) type);
+		}
+		setTypes(typeList);
+	}
+
+	/**
+	 * Sets the types to the specified value.
+	 * 
+	 * @param types
+	 *        the types to set
+	 */
+	public CsvFormat withTypes(Class<?>... types) {
+		setTypes(types);
+		return this;
+	}
+
+	/**
+	 * Returns the types.
+	 * 
+	 * @return the types
+	 */
+	public List<Class<? extends IJsonNode>> getTypes() {
+		return this.types;
 	}
 
 	/**
@@ -203,6 +285,34 @@ public class CsvFormat extends SopremoFormat {
 
 	public CsvFormat withFieldDelimiter(final String fieldDelimiter) {
 		this.setFieldDelimiter(fieldDelimiter);
+		return this;
+	}
+
+	/**
+	 * Sets the quotation to the specified value.
+	 * 
+	 * @param quotation
+	 *        the quotation to set
+	 */
+	@Property
+	@Name(verb = "header")
+	public void setHeader(final Boolean header) {
+		this.header = header;
+	}
+
+	public CsvFormat withHeader(final Boolean header) {
+		setHeader(header);
+		return this;
+	}
+
+	/**
+	 * Sets the keyNames to the specified value.
+	 * 
+	 * @param keyNames
+	 *        the keyNames to set
+	 */
+	public CsvFormat withKeyNames(final List<String> keyNames) {
+		this.setKeyNames(keyNames);
 		return this;
 	}
 
@@ -373,11 +483,17 @@ public class CsvFormat extends SopremoFormat {
 
 		private char fieldDelimiter;
 
-		private Boolean quotation;
+		private Boolean quotation, header;
 
 		private boolean usesQuotation;
 
-		private String[] keyNames;
+		private List<String> keyNames = new ArrayList<String>();
+
+		private List<Class<? extends IJsonNode>> types = new ArrayList<Class<? extends IJsonNode>>();
+
+		private List<NodeCache> coercingCaches = new ArrayList<NodeCache>();
+
+		private TextNode coercingRawNode;
 
 		private int numLineSamples;
 
@@ -494,6 +610,25 @@ public class CsvFormat extends SopremoFormat {
 			return bytes / (float) samplesTaken;
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see eu.stratosphere.sopremo.io.SopremoFormat.SopremoFileInputFormat#configure(eu.stratosphere.configuration.
+		 * Configuration)
+		 */
+		@Override
+		public void configure(Configuration parameters) {
+			super.configure(parameters);
+			CollectionUtil.ensureSize(this.coercingCaches, this.types.size());
+			boolean hasConversion = false;
+			for (int index = 0; index < this.types.size(); index++)
+				if (this.types.get(index) != TextNode.class) {
+					this.coercingCaches.set(index, new NodeCache());
+					hasConversion = true;
+				}
+			if(hasConversion)
+				this.coercingRawNode = new TextNode();
+		}
+
 		@Override
 		protected void open(final FSDataInputStream stream, final FileInputSplit split) throws IOException {
 			this.setState(State.TOP_LEVEL);
@@ -508,12 +643,14 @@ public class CsvFormat extends SopremoFormat {
 				this.reader.seek(this.splitStart);
 			}
 
-			if (this.keyNames.length == 0) {
+			if (this.keyNames.size() == 0) {
 				if (split.getSplitNumber() > 0)
 					this.reader.seek(0);
 				this.pos = 0;
 				this.keyNames = this.extractKeyNames();
-			}
+			} else if (this.header == Boolean.TRUE && this.splitStart == 0)
+				// skip header for first split, if we definitively know that there should be a header
+				this.extractKeyNames();
 
 			// skip to beginning of the first record
 			if (this.splitStart > 0) {
@@ -535,19 +672,24 @@ public class CsvFormat extends SopremoFormat {
 			}
 		}
 
-		/**
-		 * @param fieldIndex
-		 * @param string
-		 */
 		private void addToObject(final int fieldIndex, final String string) {
-			if (fieldIndex < this.keyNames.length)
-				this.objectNode.put(this.keyNames[fieldIndex], TextNode.valueOf(string));
+			if (fieldIndex < this.keyNames.size()) {
+				Class<? extends IJsonNode> targetType = fieldIndex < this.types.size() ? this.types.get(fieldIndex) : TextNode.class;
+				final IJsonNode node;
+				if (targetType != TextNode.class) {
+					this.coercingRawNode.setValue(string);
+					node = TypeCoercer.INSTANCE.coerce(this.coercingRawNode, this.coercingCaches.get(fieldIndex), targetType);
+				}
+				else
+					node = TextNode.valueOf(string);
+				this.objectNode.put(this.keyNames.get(fieldIndex), node);
+			}
 		}
 
 		/**
 		 * Reads the key names from the first line of the first split.
 		 */
-		private String[] extractKeyNames() throws IOException {
+		private List<String> extractKeyNames() throws IOException {
 			final List<String> keyNames = new ArrayList<String>();
 			int lastCharacter;
 			do {
@@ -556,7 +698,16 @@ public class CsvFormat extends SopremoFormat {
 				this.builder.setLength(0);
 			} while (lastCharacter != -1 && lastCharacter != '\n');
 
-			return keyNames.toArray(new String[keyNames.size()]);
+			// we were explicitly told that there is no header, so this first line is actual data
+			// we can use the data to get the number of columns and generate the keynames
+			if (this.header == Boolean.FALSE) {
+				for (int index = 0; index < keyNames.size(); index++)
+					keyNames.set(index, String.valueOf(index));
+				// we need to seek back to fetch the first row in the usual way
+				if (this.splitStart == 0)
+					this.reader.seek(0);
+			}
+			return keyNames;
 		}
 
 		private int fillBuilderWithNextField() throws IOException {
@@ -646,13 +797,15 @@ public class CsvFormat extends SopremoFormat {
 
 		private char fieldDelimiter;
 
-		private String[] keyNames;
+		private List<String> keyNames;
 
-		private Boolean quotation;
+		private Boolean quotation, header;
 
 		private Writer writer;
 
 		private transient IntList escapePositions = new IntArrayList();
+
+		private boolean writeHeader;
 
 		/*
 		 * (non-Javadoc)
@@ -672,7 +825,9 @@ public class CsvFormat extends SopremoFormat {
 		 */
 		@Override
 		public void writeValue(final IJsonNode value) throws IOException {
-			if (this.keyNames.length == 0)
+			if (this.writeHeader)
+				this.writerHeader(value);
+			if (this.keyNames.isEmpty())
 				if (value instanceof IArrayNode<?>) {
 					this.writeArray(value);
 					return;
@@ -686,12 +841,40 @@ public class CsvFormat extends SopremoFormat {
 			this.writeObject((IObjectNode) value);
 		}
 
+		private void writerHeader(IJsonNode value) throws IOException {
+			this.writeHeader = false;
+			TextNode field = new TextNode();
+			if (this.keyNames.isEmpty()) {
+				if (value instanceof IArrayNode<?>) {
+					for (int index = 0; index < ((IArrayNode<?>) value).size(); index++) {
+						field.clear();
+						field.append(index);
+						writeValue(field);
+					}
+					this.writeLineTerminator();
+					return;
+				}
+				else if (!(value instanceof IObjectNode)) {
+					field.append("Value");
+					this.write(field);
+					this.writeLineTerminator();
+					return;
+				} else
+					this.detectKeyNames(value);
+			}
+			for (int index = 0; index < this.keyNames.size(); index++) {
+				field.setValue(this.keyNames.get(index));
+				writeValue(field);
+			}
+			this.writeLineTerminator();
+		}
+
 		protected void detectKeyNames(final IJsonNode value) {
 			final List<Entry<String, IJsonNode>> values = Lists.newArrayList(((IObjectNode) value).iterator());
-			this.keyNames = new String[values.size()];
-			for (int index = 0; index < this.keyNames.length; index++)
-				this.keyNames[index] = values.get(index).getKey();
-			if (this.keyNames.length == 0)
+			this.keyNames = new ArrayList<String>(values.size());
+			for (int index = 0; index < values.size(); index++)
+				this.keyNames.add(values.get(index).getKey());
+			if (this.keyNames.isEmpty())
 				throw new IllegalStateException("Found empty object and cannot detect key names");
 		}
 
@@ -730,6 +913,7 @@ public class CsvFormat extends SopremoFormat {
 		@Override
 		protected void open(final FSDataOutputStream stream, final int taskNumber) throws IOException {
 			this.writer = new BufferedWriter(new OutputStreamWriter(stream, this.getEncoding()));
+			this.writeHeader = taskNumber == 0 && this.header == Boolean.TRUE;
 		}
 
 		/**
@@ -768,10 +952,10 @@ public class CsvFormat extends SopremoFormat {
 		 * @param value
 		 */
 		private void writeObject(final IObjectNode value) throws IOException {
-			this.write(value.get(this.keyNames[0]));
-			for (int index = 1; index < this.keyNames.length; index++) {
+			this.write(value.get(this.keyNames.get(0)));
+			for (int index = 1; index < this.keyNames.size(); index++) {
 				this.writeSeparator();
-				this.write(value.get(this.keyNames[index]));
+				this.write(value.get(this.keyNames.get(index)));
 			}
 			this.writeLineTerminator();
 		}
