@@ -53,7 +53,6 @@ public class PackageManager implements ParsingScope {
 
 	private final NameChooserProvider nameChooserProvider;
 
-	private ClassLoader classLoader;
 
 	public PackageManager(final NameChooserProvider nameChooserProvider) {
 		this.nameChooserProvider = nameChooserProvider;
