@@ -364,7 +364,7 @@ public abstract class Operator<Self extends Operator<Self>> extends Configurable
 		if (inputs == null)
 			throw new NullPointerException("inputs must not be null");
 		if (this.minInputs > inputs.size() || inputs.size() > this.maxInputs)
-			throw new IndexOutOfBoundsException();
+			throw new IndexOutOfBoundsException("Number of inputs ("+inputs.size()+") does not match given boundaries ["+this.minInputs+","+this.maxInputs+"].");
 
 		this.inputs.clear();
 		for (final JsonStream input : inputs) {
